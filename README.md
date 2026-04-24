@@ -18,6 +18,7 @@ put-call parity.
 - **Covered-call backtester** — yfinance data, rolling HV, full P&L tracking
 - **Heston stochastic vol pricer** — semi-analytical CF formula, IV skew vs BS
 - **Strategy analyser** — 4 multi-leg strategies, breakevens, max profit/loss, 2×2 P&L grid
+- **Streamlit web app** — full interactive dashboard (5 tabs, Plotly charts, dark theme)
 
 ## Requirements
 
@@ -27,6 +28,8 @@ numpy
 scipy
 matplotlib
 yfinance
+streamlit
+plotly
 ```
 
 Install dependencies:
@@ -37,7 +40,23 @@ pip install -r requirements.txt
 
 ## How to run
 
-### Options pricer (Black-Scholes)
+### Streamlit web app (all features, interactive)
+
+```bash
+streamlit run app.py
+```
+
+Opens at `http://localhost:8501` — 5 tabs:
+
+| Tab | Contents |
+|-----|----------|
+| 📊 BS Pricer & Greeks | Sidebar sliders → call/put prices, Greeks table, Delta/Gamma Plotly chart |
+| 🔍 IV Solver | Market price → implied vol (NR + Brentq), IV smile across strikes 80–120 |
+| 🌀 Heston vs BS | Heston params → ATM comparison table, IV skew Plotly chart, Feller check |
+| 📈 Backtest | Ticker input → covered-call simulation, cumulative P&L chart, trade table |
+| 🎯 Options Strategies | Strategy selector → P&L diagram, breakevens, max profit/loss metrics |
+
+### Options pricer (Black-Scholes CLI)
 
 ```bash
 python main.py
@@ -417,9 +436,12 @@ options_engine_python/
 ├── backtest.py         # Covered-call backtester (yfinance + rolling HV)
 ├── heston.py           # Heston SV pricer: CF formula + IV skew plot
 ├── strategies.py       # Multi-leg strategy analyser: payoff, breakevens, P&L
+├── app.py              # Streamlit web app: 5-tab interactive dashboard
 ├── README.md           # This file
 ├── requirements.txt    # Dependencies
 ├── .gitignore
+├── .streamlit/
+│   └── config.toml     # Dark theme + headless server config
 └── plots/
     ├── plot1_delta_gamma.png
     ├── plot2_theta_decay.png
