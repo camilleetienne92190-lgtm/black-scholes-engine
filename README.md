@@ -206,6 +206,23 @@ these vols, then IV is recovered from each price to verify the solver
 round-trips accurately. The flat `σ = 0.20` assumption is shown as a
 dashed reference line to illustrate the model's limitation.
 
+## Visualisations
+
+### Plot 1 — Delta & Gamma vs Spot Price
+![Delta and Gamma vs Spot Price](plots/plot1_delta_gamma.png)
+
+### Plot 2 — Theta Decay vs Time to Expiry
+![Theta Decay vs Time to Expiry](plots/plot2_theta_decay.png)
+
+### Plot 3 — Vega vs Spot Price (multi-sigma)
+![Vega vs Spot Price](plots/plot3_vega_surface.png)
+
+### Plot 4 — Option Price vs Spot (Payoff Diagram)
+![Option Price vs Spot Payoff Diagram](plots/plot4_payoff_diagram.png)
+
+### Plot 5 — Implied Volatility Smile
+![Implied Volatility Smile](plots/plot5_iv_smile.png)
+
 ## Formula reference
 
 ### Black-Scholes price
