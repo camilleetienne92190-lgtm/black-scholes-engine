@@ -15,6 +15,7 @@ put-call parity.
 - **Implied volatility solver** — Newton-Raphson primary + Brentq fallback
 - **Greeks visualisation** — 4 diagnostic plots (dark theme, PNG output)
 - **IV smile plot** — simulated vol surface with recovered implied vols
+- **Covered-call backtester** — yfinance data, rolling HV, full P&L tracking
 
 ## Requirements
 
@@ -23,6 +24,7 @@ Python >= 3.10
 numpy
 scipy
 matplotlib
+yfinance
 ```
 
 Install dependencies:
@@ -206,6 +208,34 @@ these vols, then IV is recovered from each price to verify the solver
 round-trips accurately. The flat `σ = 0.20` assumption is shown as a
 dashed reference line to illustrate the model's limitation.
 
+### Backtester
+
+```bash
+python backtest.py          # SPY, last 2 years
+python backtest.py AAPL     # any ticker
+python backtest.py --no-show  # headless / CI
+```
+
+Simulates a **rolling covered-call strategy** over the last 2 years of daily price data:
+
+| Parameter | Value |
+|-----------|-------|
+| Data source | yfinance (adjusted close) |
+| Rebalance frequency | Every 30 trading days |
+| Strike | 5% OTM  (K = S × 1.05) |
+| Expiry | 30 calendar days (T = 30/365) |
+| Volatility input | 30-day realised HV from log returns |
+| Risk-free rate | 5% |
+
+**P&L per leg:**
+```
+If S_expiry > K  (exercised) : P&L = premium + K        − S_entry
+If S_expiry ≤ K  (worthless) : P&L = premium + S_expiry − S_entry
+                             = premium + min(S_expiry, K) − S_entry
+```
+
+Prints a full trade-by-trade summary table and saves Plot 6.
+
 ## Visualisations
 
 ### Plot 1 — Delta & Gamma vs Spot Price
@@ -222,6 +252,9 @@ dashed reference line to illustrate the model's limitation.
 
 ### Plot 5 — Implied Volatility Smile
 ![Implied Volatility Smile](plots/plot5_iv_smile.png)
+
+### Plot 6 — Covered-Call Backtest P&L (SPY, 2 years)
+![Covered-Call Backtest P&L](plots/plot6_backtest_pnl.png)
 
 ## Formula reference
 
@@ -263,6 +296,7 @@ options_engine_python/
 ├── main.py             # Interactive pricer CLI
 ├── greeks_viz.py       # Greeks visualisation (4 plots)
 ├── implied_vol.py      # IV solver: Newton-Raphson + Brentq + smile plot
+├── backtest.py         # Covered-call backtester (yfinance + rolling HV)
 ├── README.md           # This file
 ├── requirements.txt    # Dependencies
 ├── .gitignore
@@ -271,7 +305,8 @@ options_engine_python/
     ├── plot2_theta_decay.png
     ├── plot3_vega_surface.png
     ├── plot4_payoff_diagram.png
-    └── plot5_iv_smile.png
+    ├── plot5_iv_smile.png
+    └── plot6_backtest_pnl.png
 ```
 
 ## Using the library directly
