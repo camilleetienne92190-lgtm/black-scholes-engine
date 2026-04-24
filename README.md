@@ -17,6 +17,7 @@ put-call parity.
 - **IV smile plot** — simulated vol surface with recovered implied vols
 - **Covered-call backtester** — yfinance data, rolling HV, full P&L tracking
 - **Heston stochastic vol pricer** — semi-analytical CF formula, IV skew vs BS
+- **Strategy analyser** — 4 multi-leg strategies, breakevens, max profit/loss, 2×2 P&L grid
 
 ## Requirements
 
@@ -237,6 +238,68 @@ If S_expiry ≤ K  (worthless) : P&L = premium + S_expiry − S_entry
 
 Prints a full trade-by-trade summary table and saves Plot 6.
 
+### Options strategy analyser
+
+```bash
+python strategies.py              # full demo: 4 strategies, interactive
+python strategies.py --no-show    # save PNG only (headless / CI)
+```
+
+Analyses four classic multi-leg options strategies using BS-priced premiums:
+
+| Strategy | Legs | Bias |
+|----------|------|------|
+| Long Straddle | Long call + long put (same K) | Volatility long |
+| Long Strangle | Long OTM call + long OTM put | Volatility long (cheaper) |
+| Iron Condor | Short call/put spread (4 legs) | Range-bound / vol short |
+| Bull Call Spread | Long lower call + short upper call | Moderately bullish |
+
+**Default parameters:** S=100, r=0.05, T=0.25 yr, sigma=20%
+
+**Output per strategy:**
+- Net premium (debit / credit)
+- Breakeven price(s) — linear interpolation at P&L sign changes
+- Max profit and max loss (correctly distinguishes flat plateau from truly unlimited)
+- P&L at S=90 / 100 / 110 spot levels
+- Leg-by-leg breakdown with BS-priced premiums
+
+**Example output:**
+```
+============================================================
+  Options Strategy Summary
+  S=100.0, r=0.05, T=0.25 yr, sigma=20%
+============================================================
+
+  ========================================================
+  Strategy    : Bull Call Spread
+  ========================================================
+  Net Premium : $+3.4239  (debit)
+  Breakeven(s): $103.42
+  Max Profit  : $6.58  at S=$110.0
+  Max Loss    : $-3.42  at S=$70.0
+  ----------------------------------------
+  P&L at S=90   : $-3.42
+  P&L at S=100  : $-3.41
+  P&L at S=110  : $+6.57
+  ----------------------------------------
+  Leg                         K   Qty    Premium
+  Long call                 100    +1   $ 4.6150
+  Short call                110    -1   $ 1.1911
+```
+
+**Using as a library:**
+```python
+from strategies import build_strategies, strategy_payoff, analyse
+import numpy as np
+
+strategies = build_strategies(S=100, r=0.05, T=0.25, sigma=0.20)
+S_range = np.linspace(70, 130, 600)
+
+for name, legs in strategies.items():
+    result = analyse(S_range, legs)
+    print(f"{name}: breakevens={result['breakevens']}, max_profit={result['max_profit_str']}")
+```
+
 ### Heston stochastic volatility pricer
 
 ```bash
@@ -308,6 +371,9 @@ results = compare_bs_heston(S=100, K_range=K_range, T=1.0, r=0.05,
 ### Plot 6 — Covered-Call Backtest P&L (SPY, 2 years)
 ![Covered-Call Backtest P&L](plots/plot6_backtest_pnl.png)
 
+### Plot 8 — Options Strategy P&L (4 strategies)
+![Options Strategy P&L](plots/plot8_strategies.png)
+
 ## Formula reference
 
 ### Black-Scholes price
@@ -350,6 +416,7 @@ options_engine_python/
 ├── implied_vol.py      # IV solver: Newton-Raphson + Brentq + smile plot
 ├── backtest.py         # Covered-call backtester (yfinance + rolling HV)
 ├── heston.py           # Heston SV pricer: CF formula + IV skew plot
+├── strategies.py       # Multi-leg strategy analyser: payoff, breakevens, P&L
 ├── README.md           # This file
 ├── requirements.txt    # Dependencies
 ├── .gitignore
@@ -360,7 +427,8 @@ options_engine_python/
     ├── plot4_payoff_diagram.png
     ├── plot5_iv_smile.png
     ├── plot6_backtest_pnl.png
-    └── plot7_heston_smile.png
+    ├── plot7_heston_smile.png
+    └── plot8_strategies.png
 ```
 
 ## Using the library directly
