@@ -16,6 +16,7 @@ put-call parity.
 - **Greeks visualisation** — 4 diagnostic plots (dark theme, PNG output)
 - **IV smile plot** — simulated vol surface with recovered implied vols
 - **Covered-call backtester** — yfinance data, rolling HV, full P&L tracking
+- **Heston stochastic vol pricer** — semi-analytical CF formula, IV skew vs BS
 
 ## Requirements
 
@@ -236,6 +237,54 @@ If S_expiry ≤ K  (worthless) : P&L = premium + S_expiry − S_entry
 
 Prints a full trade-by-trade summary table and saves Plot 6.
 
+### Heston stochastic volatility pricer
+
+```bash
+python heston.py              # full demo: ATM comparison + IV smile plot
+python heston.py --no-show    # headless (save PNG, skip display)
+```
+
+Prices European options under the **Heston (1993)** stochastic volatility model
+using the semi-analytical characteristic-function formula and numerical integration
+(`scipy.integrate.quad`). Uses the **Albrecher et al. (2007)** numerically stable
+formulation to avoid branch-cut discontinuities.
+
+**Model dynamics:**
+```
+dS = r·S·dt + sqrt(v)·S·dW_S
+dv = kappa·(theta − v)·dt + sigma_v·sqrt(v)·dW_v        corr(dW_S, dW_v) = rho·dt
+```
+
+**Default parameters:** S=100, K=100, T=1.0, r=0.05, v0=0.04, kappa=2.0, theta=0.04, sigma_v=0.3, rho=-0.7
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `v0` | Initial variance (sqrt(v0) = initial vol) | 0.04 → 20% |
+| `kappa` | Mean-reversion speed | 2.0 |
+| `theta` | Long-run variance (sqrt(theta) = long-run vol) | 0.04 → 20% |
+| `sigma_v` | Volatility of variance (vol-of-vol) | 0.30 |
+| `rho` | Spot–vol correlation (negative → equity skew) | -0.70 |
+
+**Feller condition:** `2·kappa·theta >= sigma_v²` — checked automatically (warning if violated).
+
+**Using as a library:**
+```python
+from heston import heston_price, compare_bs_heston
+import numpy as np
+
+# Single price
+price = heston_price(S=100, K=100, T=1.0, r=0.05,
+                     v0=0.04, kappa=2.0, theta=0.04,
+                     sigma_v=0.3, rho=-0.7, option_type='call')
+print(f"Heston call: ${price:.4f}")   # ~10.3942
+
+# IV smile across strikes
+K_range = np.linspace(80, 120, 41)
+results = compare_bs_heston(S=100, K_range=K_range, T=1.0, r=0.05,
+                             v0=0.04, kappa=2.0, theta=0.04,
+                             sigma_v=0.3, rho=-0.7, show=False)
+```
+
 ## Visualisations
 
 ### Plot 1 — Delta & Gamma vs Spot Price
@@ -249,6 +298,9 @@ Prints a full trade-by-trade summary table and saves Plot 6.
 
 ### Plot 4 — Option Price vs Spot (Payoff Diagram)
 ![Option Price vs Spot Payoff Diagram](plots/plot4_payoff_diagram.png)
+
+### Plot 7 — Heston Model: IV Smile vs Flat Black-Scholes
+![Heston IV Smile vs Black-Scholes](plots/plot7_heston_smile.png)
 
 ### Plot 5 — Implied Volatility Smile
 ![Implied Volatility Smile](plots/plot5_iv_smile.png)
@@ -297,6 +349,7 @@ options_engine_python/
 ├── greeks_viz.py       # Greeks visualisation (4 plots)
 ├── implied_vol.py      # IV solver: Newton-Raphson + Brentq + smile plot
 ├── backtest.py         # Covered-call backtester (yfinance + rolling HV)
+├── heston.py           # Heston SV pricer: CF formula + IV skew plot
 ├── README.md           # This file
 ├── requirements.txt    # Dependencies
 ├── .gitignore
@@ -306,7 +359,8 @@ options_engine_python/
     ├── plot3_vega_surface.png
     ├── plot4_payoff_diagram.png
     ├── plot5_iv_smile.png
-    └── plot6_backtest_pnl.png
+    ├── plot6_backtest_pnl.png
+    └── plot7_heston_smile.png
 ```
 
 ## Using the library directly
