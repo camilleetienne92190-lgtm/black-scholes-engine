@@ -728,6 +728,124 @@ with tab1:
         _apply_bbg_axes(fig_heat)
         st.plotly_chart(fig_heat, use_container_width=True)
 
+        # ── P&L Explainer ─────────────────────────────────────────────────────
+        section_label("P&L EXPLAINER — Greeks Attribution")
+
+        st.markdown(
+            "<p style='font-family:Courier New;font-size:12px;color:#8fa3b8;margin:0 0 10px 0;'>"
+            "Simulate how much your <b style='color:#00d4aa'>CALL</b> option gains or loses "
+            "for a given spot move — decomposed into Greek contributions via Taylor expansion."
+            "</p>",
+            unsafe_allow_html=True,
+        )
+
+        spot_move_pct = st.slider(
+            "Spot Move Scenario",
+            -20, 20, 5, 1,
+            format="%d%%",
+            key="pnl_explainer_move",
+        )
+
+        dS          = S_s * spot_move_pct / 100.0
+        dt          = 1 / 252                               # 1 trading day
+        delta_pnl   = cg.delta * dS
+        gamma_pnl   = 0.5 * cg.gamma * dS ** 2
+        theta_pnl   = cg.theta * dt
+        total_pnl   = delta_pnl + gamma_pnl + theta_pnl
+
+        S_new       = S_s + dS
+        actual_call = black_scholes(S_new, K_s, T_s, r_s, sig_s, "call").price
+        actual_pnl  = actual_call - call_r.price
+
+        # ── 5 stat cards ──────────────────────────────────────────────────────
+        c1, c2, c3, c4, c5 = st.columns(5)
+        _card_items = [
+            (c1, "Δ Delta P&L",       delta_pnl),
+            (c2, "Γ Gamma P&L",       gamma_pnl),
+            (c3, "Θ Theta P&L (1d)",  theta_pnl),
+            (c4, "∑ Total Approx",    total_pnl),
+            (c5, "✦ Actual Δprice",   actual_pnl),
+        ]
+        for col, lbl, val in _card_items:
+            color  = C_GREEN if val >= 0 else C_RED
+            border = C_GREEN if val >= 0 else C_RED
+            prefix = "+" if val >= 0 else ""
+            with col:
+                st.markdown(
+                    stat_card(lbl, f"{prefix}${val:.3f}", color=color, border_color=border),
+                    unsafe_allow_html=True,
+                )
+
+        # ── Horizontal bar chart ───────────────────────────────────────────────
+        _bar_labels = ["Delta", "Gamma", "Theta (1d)", "Taylor Total", "Actual Δprice"]
+        _bar_values = [delta_pnl, gamma_pnl, theta_pnl, total_pnl, actual_pnl]
+        _bar_colors = [C_GREEN if v >= 0 else C_RED for v in _bar_values]
+
+        fig_pnl = go.Figure(go.Bar(
+            x=_bar_values,
+            y=_bar_labels,
+            orientation="h",
+            marker_color=_bar_colors,
+            marker_line_width=0,
+            text=[f"{'+'if v>=0 else ''}${v:.3f}" for v in _bar_values],
+            textposition="outside",
+            textfont=dict(family="Courier New", size=11, color=C_TEXT),
+            hovertemplate="%{y}: %{x:.4f}<extra></extra>",
+        ))
+        fig_pnl.update_layout(**_layout(
+            height=260,
+            xaxis_title="P&L ($)",
+            yaxis_title="",
+        ))
+        fig_pnl.update_layout(
+            xaxis=dict(zeroline=True, zerolinecolor=C_BORDER, zerolinewidth=1),
+            yaxis=dict(autorange="reversed"),
+            margin=dict(l=10, r=80, t=30, b=30),
+        )
+        _apply_bbg_axes(fig_pnl)
+        st.plotly_chart(fig_pnl, use_container_width=True)
+
+        # ── Formula explainer box ─────────────────────────────────────────────
+        _move_sign = "+" if spot_move_pct >= 0 else ""
+        st.markdown(f"""
+<div style="
+    background:#0d1a26;
+    border:1px solid #1f2d3d;
+    border-left:3px solid #00d4aa;
+    border-radius:4px;
+    padding:14px 18px;
+    font-family:'Courier New',monospace;
+    font-size:12px;
+    color:#8fa3b8;
+    margin-top:8px;
+">
+  <div style="color:#00d4aa;font-size:11px;letter-spacing:1px;margin-bottom:8px;">
+    TAYLOR EXPANSION — P&L ATTRIBUTION
+  </div>
+  <div style="color:#e8edf2;font-size:13px;margin-bottom:10px;">
+    ΔP ≈ <span style="color:#00d4aa">Δ·ΔS</span>
+       + <span style="color:#ffd166">½·Γ·ΔS²</span>
+       + <span style="color:#ff4d6a">Θ·Δt</span>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 20px;">
+    <span>Spot move (ΔS)</span>
+    <span style="color:#e8edf2">{_move_sign}{dS:+.2f}  ({_move_sign}{spot_move_pct}%)</span>
+    <span>Δ · ΔS</span>
+    <span style="color:{'#00d4aa' if delta_pnl>=0 else '#ff4d6a'}">{'+' if delta_pnl>=0 else ''}{delta_pnl:.4f}</span>
+    <span>½ · Γ · ΔS²</span>
+    <span style="color:{'#00d4aa' if gamma_pnl>=0 else '#ff4d6a'}">{'+' if gamma_pnl>=0 else ''}{gamma_pnl:.4f}</span>
+    <span>Θ · Δt (1d)</span>
+    <span style="color:{'#00d4aa' if theta_pnl>=0 else '#ff4d6a'}">{'+' if theta_pnl>=0 else ''}{theta_pnl:.4f}</span>
+    <span style="border-top:1px solid #1f2d3d;padding-top:4px;">Taylor total</span>
+    <span style="color:{'#00d4aa' if total_pnl>=0 else '#ff4d6a'};border-top:1px solid #1f2d3d;padding-top:4px;">{'+' if total_pnl>=0 else ''}{total_pnl:.4f}</span>
+    <span>Actual BS Δprice</span>
+    <span style="color:{'#00d4aa' if actual_pnl>=0 else '#ff4d6a'}">{'+' if actual_pnl>=0 else ''}{actual_pnl:.4f}</span>
+    <span>Taylor error</span>
+    <span style="color:#4a6278">{total_pnl - actual_pnl:+.4f}</span>
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
     except ValueError as exc:
         st.error(f"Pricing error: {exc}")
 
