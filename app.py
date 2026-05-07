@@ -187,14 +187,29 @@ st.markdown("""
 }
 
 /* ── Sliders ─────────────────────────────────────────────────── */
-.stSlider [data-baseweb="slider"] {
-    background: linear-gradient(to right, var(--c-green), var(--c-cyan)) !important;
+.stSlider > div > div > div {
+    background: #1f2d3d !important;
 }
-[data-testid="stSlider"] > div > div > div {
-    background-color: var(--border) !important;
+.stSlider > div > div > div > div {
+    background: #1f2d3d !important;
 }
-[data-testid="stSlider"] > div > div > div > div {
-    background-color: var(--c-green) !important;
+.stSlider [data-testid="stThumb"] {
+    background-color: #00d4aa !important;
+    border: 2px solid #00d4aa !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+.stSlider [data-testid="stTrackFill"] {
+    background: linear-gradient(90deg, #00a884, #00d4aa) !important;
+}
+.stSlider * {
+    color: #e8edf2 !important;
+}
+[data-testid="stSidebar"] .stSlider > div {
+    background: transparent !important;
+}
+[data-testid="stSidebar"] > div {
+    background-color: #111820 !important;
 }
 
 /* ── Metric containers ──────────────────────────────────────── */
