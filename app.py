@@ -38,9 +38,10 @@ warnings.filterwarnings("ignore")
 
 # ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="Options Pricing Engine",
-    page_icon="◈",
+    page_title="BS ENGINE | Options Analytics",
+    page_icon="▸",
     layout="wide",
+    initial_sidebar_state="expanded",
 )
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -210,6 +211,35 @@ st.markdown("""
 }
 [data-testid="stSidebar"] > div {
     background-color: #111820 !important;
+}
+
+/* ── Slider min/max tick labels ───────────────────────────── */
+.stSlider [data-testid="stTickBar"] {
+    color: #4a6278 !important;
+}
+.stSlider div[data-testid="stTickBarMin"],
+.stSlider div[data-testid="stTickBarMax"] {
+    color: #4a6278 !important;
+    font-family: 'Courier New', monospace !important;
+    font-size: 10px !important;
+}
+.stSlider p {
+    color: #4a6278 !important;
+    font-family: 'Courier New', monospace !important;
+    font-size: 10px !important;
+}
+
+/* ── Progress bar ────────────────────────────────────────── */
+.stProgress > div > div > div > div {
+    background: linear-gradient(90deg, #00a884, #00d4aa) !important;
+}
+.stProgress > div > div > div {
+    background-color: #1f2d3d !important;
+}
+[data-testid="stProgressBar"] p {
+    font-family: 'Courier New', monospace !important;
+    font-size: 11px !important;
+    color: #8fa3b8 !important;
 }
 
 /* ── Metric containers ──────────────────────────────────────── */
@@ -542,11 +572,11 @@ with st.sidebar:
 # TABS
 # ─────────────────────────────────────────────────────────────────────────────
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
-    "BS PRICER & GREEKS",
-    "IV SOLVER",
-    "HESTON VS BS",
-    "BACKTEST",
-    "STRATEGIES",
+    "▸  BS PRICER & GREEKS",
+    "▸  IV SOLVER",
+    "▸  HESTON vs BS",
+    "▸  BACKTEST",
+    "▸  STRATEGIES",
 ])
 
 
@@ -914,16 +944,28 @@ with tab3:
             K_range = np.linspace(h_S * 0.75, h_S * 1.25, 31)
             heston_ivs: list[float | None] = []
 
-            with st.spinner("Computing IV smile (~10 s)..."):
-                for Kh in K_range:
-                    try:
-                        hp   = heston_price(h_S, Kh, h_T, h_r, h_v0, h_kappa,
-                                            h_theta, h_sigma_v, h_rho, "call")
-                        ivr2 = iv_solver(hp, h_S, Kh, h_T, h_r, "call",
-                                         sigma_init=sigma_bs)
-                        heston_ivs.append(ivr2.implied_vol * 100)
-                    except Exception:
-                        heston_ivs.append(None)
+            _progress = st.progress(0, text="⬡ Initializing Heston engine...")
+            _status   = st.empty()
+            _total    = len(K_range)
+
+            for _idx, Kh in enumerate(K_range):
+                _pct = int((_idx / _total) * 100)
+                _progress.progress(
+                    _pct,
+                    text=f"⬡ Computing characteristic functions... strike {_idx + 1}/{_total}",
+                )
+                try:
+                    hp   = heston_price(h_S, Kh, h_T, h_r, h_v0, h_kappa,
+                                        h_theta, h_sigma_v, h_rho, "call")
+                    ivr2 = iv_solver(hp, h_S, Kh, h_T, h_r, "call",
+                                     sigma_init=sigma_bs)
+                    heston_ivs.append(ivr2.implied_vol * 100)
+                except Exception:
+                    heston_ivs.append(None)
+
+            _progress.progress(100, text="⬡ Done")
+            _progress.empty()
+            _status.empty()
 
             bs_flat  = [sigma_bs * 100] * len(K_range)
             valid    = [v for v in heston_ivs if v is not None]
