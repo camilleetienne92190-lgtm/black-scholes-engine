@@ -500,7 +500,7 @@ with st.sidebar:
     st.caption("Controls Tab 1 — BS Pricer & Greeks")
     S_s   = st.slider("Spot Price  S",         50.0, 300.0, 100.0,  1.0)
     K_s   = st.slider("Strike Price  K",        50.0, 300.0, 105.0,  1.0)
-    T_s   = st.slider("Time to Expiry  T (yr)", 0.01,   2.0,   1.0, 0.01)
+    T_s   = st.slider("Maturity T (years)", 0.01,   2.0,   1.0, 0.01)
     r_s   = st.slider("Risk-free Rate  r",       0.0,   0.1,  0.05, 0.001, format="%.3f")
     sig_s = st.slider("Volatility  σ",          0.05,   1.0,  0.20, 0.01,  format="%.2f")
 
@@ -701,7 +701,7 @@ with tab2:
         iv_price  = st.number_input("Market Option Price ($)",    0.01, 99999.0,   8.50, 0.01)
         iv_S      = st.number_input("Spot Price (S)",              1.0, 99999.0, 100.0,  1.0, key="iv_S")
         iv_K      = st.number_input("Strike Price (K)",            1.0, 99999.0, 105.0,  1.0, key="iv_K")
-        iv_T      = st.number_input("Time to Expiry (T, yr)",     0.01,     5.0,   1.0, 0.01, key="iv_T")
+        iv_T      = st.number_input("Maturity T (years)",           0.01,     5.0,   1.0, 0.01, key="iv_T")
         iv_r      = st.number_input("Risk-free Rate (r)",          0.0,     1.0,  0.05, 0.001,
                                     format="%.3f", key="iv_r")
         iv_type   = st.selectbox("Option Type", ["call", "put"], key="iv_type")
@@ -829,28 +829,10 @@ with tab2:
             font=dict(family="Courier New, monospace", color=C_SEC, size=10),
             hoverlabel=_BBG_HOVER,
             scene=dict(
-                bgcolor="#0d1117",
-                xaxis=dict(
-                    title="STRIKE ($)",
-                    gridcolor=C_BORDER, linecolor=C_BORDER,
-                    color=C_SEC,
-                    titlefont=dict(family="Courier New", size=10),
-                    tickfont=dict(family="Courier New", size=8),
-                ),
-                yaxis=dict(
-                    title="TIME (YR)",
-                    gridcolor=C_BORDER, linecolor=C_BORDER,
-                    color=C_SEC,
-                    titlefont=dict(family="Courier New", size=10),
-                    tickfont=dict(family="Courier New", size=8),
-                ),
-                zaxis=dict(
-                    title="IV (%)",
-                    gridcolor=C_BORDER, linecolor=C_BORDER,
-                    color=C_SEC,
-                    titlefont=dict(family="Courier New", size=10),
-                    tickfont=dict(family="Courier New", size=8),
-                ),
+                bgcolor=C_BG,
+                xaxis=dict(title="Strike ($)",      backgroundcolor=C_BG, gridcolor=C_BORDER),
+                yaxis=dict(title="Maturity (yr)",   backgroundcolor=C_BG, gridcolor=C_BORDER),
+                zaxis=dict(title="IV (%)",          backgroundcolor=C_BG, gridcolor=C_BORDER),
                 camera=dict(eye=dict(x=1.6, y=-1.6, z=0.8)),
             ),
             height=480,
@@ -874,7 +856,7 @@ with tab3:
         section_label("PARAMETERS")
         h_S       = st.number_input("Spot Price (S)",     1.0, 9999.0, 100.0,  1.0, key="h_S")
         h_K       = st.number_input("Strike Price (K)",   1.0, 9999.0, 100.0,  1.0, key="h_K")
-        h_T       = st.number_input("Time to Expiry (T)", 0.01,   5.0,   1.0, 0.01, key="h_T")
+        h_T       = st.number_input("Maturity T (years)",  0.01,   5.0,   1.0, 0.01, key="h_T")
         h_r       = st.number_input("Risk-free Rate (r)", 0.0,    1.0,  0.05, 0.001,
                                     format="%.3f", key="h_r")
         section_label("HESTON PARAMS")
@@ -1111,7 +1093,7 @@ with tab5:
         st5_S   = st.slider("Spot Price (S)",           50.0, 300.0, 100.0,  1.0, key="st5_S")
         st5_sig = st.slider("Volatility (σ)",           0.05,   1.0,  0.20, 0.01, key="st5_sig",
                             format="%.2f")
-        st5_T   = st.slider("Time to Expiry (T, yr)",  0.01,   2.0,  0.25, 0.01, key="st5_T")
+        st5_T   = st.slider("Maturity T (years)",       0.01,   2.0,  0.25, 0.01, key="st5_T")
         st5_r   = st.slider("Risk-free Rate (r)",        0.0,   0.1,  0.05, 0.001, key="st5_r",
                             format="%.3f")
 
