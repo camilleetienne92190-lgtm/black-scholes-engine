@@ -754,7 +754,7 @@ with tab1:
         total_pnl   = delta_pnl + gamma_pnl + theta_pnl
 
         S_new       = S_s + dS
-        actual_call = black_scholes(S_new, K_s, T_s, r_s, sig_s, "call").price
+        actual_call = black_scholes(S_new, K_s, T_s, r_s, sig_s, "call")
         actual_pnl  = actual_call - call_r.price
 
         # ── 5 stat cards ──────────────────────────────────────────────────────
